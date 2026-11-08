@@ -369,6 +369,60 @@
                 activeTransactions: [],
 
                 async init() {
+                    if (window.location.search.includes('demo=true')) {
+                        this.setupStatus = {
+                            owner_email: 'demo.user@example.com',
+                            spreadsheet_name: 'Credit Card Payment Tracker',
+                            spreadsheet_url: '#'
+                        };
+                        this.stats = {
+                            current_period: 'OCTOBER 2026',
+                            current_month_total: 4850.00,
+                            active_rules_count: 7,
+                            total_statements_count: 14,
+                            last_sync: {
+                                status: 'SUCCESS',
+                                completed_at: '2026-10-18T10:02:15Z',
+                                cards_processed: 6
+                            }
+                        };
+                        this.matrix = {
+                            columns: [
+                                { code: 'ENBD', name: 'Emirates NBD' },
+                                { code: 'EI_CASHBACK', name: 'EI - Cashback' },
+                                { code: 'EI_RTA', name: 'EI - RTA-NOL' },
+                                { code: 'FAB_GEMS', name: 'FAB - GEMS' },
+                                { code: 'FAB_BLUE', name: 'FAB - Blue' },
+                                { code: 'CBD', name: 'CBD' },
+                                { code: 'ADCB', name: 'ADCB' }
+                            ],
+                            rows: [
+                                { month: 'JANUARY', values: {}, total: 0 },
+                                { month: 'FEBRUARY', values: {}, total: 0 },
+                                { month: 'MARCH', values: {}, total: 0 },
+                                { month: 'APRIL', values: {}, total: 0 },
+                                { month: 'MAY', values: {}, total: 0 },
+                                { month: 'JUNE', values: {}, total: 0 },
+                                { month: 'JULY', values: {}, total: 0 },
+                                { month: 'AUGUST', values: { ENBD: 1420.00, EI_CASHBACK: 310.00, EI_RTA: 180.00, FAB_GEMS: 890.00, FAB_BLUE: null, CBD: 590.00, ADCB: 480.00 }, total: 3870.00 },
+                                { month: 'SEPTEMBER', values: { ENBD: 1650.00, EI_CASHBACK: 380.00, EI_RTA: 195.00, FAB_GEMS: 980.00, FAB_BLUE: 420.00, CBD: 610.00, ADCB: 515.00 }, total: 4750.00 },
+                                { month: 'OCTOBER', values: { ENBD: 1820.00, EI_CASHBACK: 450.50, EI_RTA: 210.00, FAB_GEMS: 1120.00, FAB_BLUE: null, CBD: 750.00, ADCB: 499.50 }, total: 4850.00 },
+                                { month: 'NOVEMBER', values: {}, total: 0 },
+                                { month: 'DECEMBER', values: {}, total: 0 }
+                            ],
+                            column_totals: { ENBD: 4890.00, EI_CASHBACK: 1140.50, EI_RTA: 585.00, FAB_GEMS: 2990.00, FAB_BLUE: 420.00, CBD: 1950.00, ADCB: 1494.50 },
+                            grand_total: 13470.00
+                        };
+                        this.statements = [
+                            { id: 1, card_code: 'ENBD', month: 'OCTOBER', year: 2026, total_amount_due: 1820.00, transaction_count: 18, processed_at: '2026-10-18T10:01:00Z' },
+                            { id: 2, card_code: 'FAB_GEMS', month: 'OCTOBER', year: 2026, total_amount_due: 1120.00, transaction_count: 12, processed_at: '2026-10-18T10:01:20Z' },
+                            { id: 3, card_code: 'CBD', month: 'OCTOBER', year: 2026, total_amount_due: 750.00, transaction_count: 9, processed_at: '2026-10-18T10:01:40Z' },
+                            { id: 4, card_code: 'ADCB', month: 'OCTOBER', year: 2026, total_amount_due: 499.50, transaction_count: 7, processed_at: '2026-10-18T10:02:00Z' },
+                            { id: 5, card_code: 'EI_CASHBACK', month: 'OCTOBER', year: 2026, total_amount_due: 450.50, transaction_count: 6, processed_at: '2026-10-18T10:02:10Z' },
+                            { id: 6, card_code: 'EI_RTA', month: 'OCTOBER', year: 2026, total_amount_due: 210.00, transaction_count: 4, processed_at: '2026-10-18T10:02:15Z' }
+                        ];
+                        return;
+                    }
                     await this.checkAuth();
                     await this.fetchSetupStatus();
                     await this.fetchStats();

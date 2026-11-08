@@ -401,6 +401,18 @@
                 },
 
                 async init() {
+                    if (window.location.search.includes('demo=true')) {
+                        this.setupStatus = {
+                            owner_email: 'demo.user@example.com',
+                            spreadsheet_name: 'Credit Card Payment Tracker',
+                            spreadsheet_id: '1AbC...9xYz',
+                            spreadsheet_url: '#',
+                            gmail_label: 'Statements'
+                        };
+                        await this.fetchRules();
+                        await this.fetchParsers();
+                        return;
+                    }
                     await this.checkAuth();
                     await this.fetchSetupStatus();
                     await this.fetchRules();
