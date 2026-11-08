@@ -30,7 +30,23 @@ A modern, self-hosted web application and pipeline to automatically ingest passw
   - Statement transaction inspector with debit/credit badges
   - Real-time sync trigger with live progress indicator
   - Statement mapping rules CRUD management and in-app Gmail query tester.
-- **Cloud & Self-Hosted Ready:** Out of the box support for local deployment, Docker, and **FastAPI Cloud** (`fastapicloud.com`).
+- **Cloud & Self-Hosted Ready:** Out of the box support for local deployment, Docker, **Render** (`render.com`), and **FastAPI Cloud** (`fastapicloud.com`).
+
+---
+
+## 📸 Screenshots
+
+### 📊 Financial Dashboard
+Live monthly credit card payment matrix mirroring your Google Sheet, KPI summary cards, and itemized transaction inspector.
+![Financial Dashboard](docs/screenshots/dashboard.png)
+
+### 🧙‍♂️ First-Time Setup Wizard (Step 1 of 3)
+1-click Google Cloud Console helpers, drag-and-drop `client_secret.json` credentials uploader, and Google SSO sign-in.
+![First-Time Setup Wizard](docs/screenshots/setup_wizard.png)
+
+### ⚙️ Bank Statement Mapping Rules & Diagnostics
+Manage bank queries, statement PDF passwords, and parser assignments with an in-app Gmail live tester.
+![Settings & Mapping Rules](docs/screenshots/settings.png)
 
 ---
 
