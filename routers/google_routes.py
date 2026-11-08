@@ -31,21 +31,26 @@ class VerifySetupSchema(BaseModel):
 
 def get_redirect_uri(request: Request) -> str:
     """Builds the canonical OAuth redirect URI matching the current browser request host."""
+    # Detect incoming host and proto from reverse proxy headers (Render, Cloudflare, etc.)
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme or "http"
+
+    # Local development: if browser accessed via localhost or 127.0.0.1
+    if "127.0.0.1" in host or "localhost" in host:
+        env_uri = os.getenv("GOOGLE_REDIRECT_URI")
+        if env_uri:
+            return env_uri
+        port = request.url.port or 8000
+        host_name = host.split(":")[0]
+        return f"http://{host_name}:{port}/api/auth/google/callback"
+
+    # Cloud / Production environment (Render, FastAPI Cloud, etc.):
+    # If GOOGLE_REDIRECT_URI is explicitly set to a production domain (not localhost), honor it
     env_uri = os.getenv("GOOGLE_REDIRECT_URI")
-    if env_uri:
+    if env_uri and "localhost" not in env_uri and "127.0.0.1" not in env_uri:
         return env_uri
 
-    base_url = str(request.base_url).rstrip("/")
-    port = request.url.port or 8000
-    
-    if "127.0.0.1" in base_url:
-        return f"http://127.0.0.1:{port}/api/auth/google/callback"
-    elif "localhost" in base_url:
-        return f"http://localhost:{port}/api/auth/google/callback"
-
-    # Cloud deployment behind reverse proxy (e.g. fastapicloud.com)
-    proto = request.headers.get("x-forwarded-proto", request.url.scheme)
-    host = request.headers.get("x-forwarded-host", request.url.netloc)
+    # Otherwise automatically build from the live incoming public HTTPS domain
     return f"{proto}://{host}/api/auth/google/callback"
 
 @router.get("/api/setup/status")
