@@ -1,0 +1,53 @@
+name: Monthly Credit Card Sync
+
+on:
+  schedule:
+    # Runs at 06:00 UTC on the 15th of every month
+    - cron: '0 6 15 * *'
+  workflow_dispatch: # Allows manual run button in GitHub UI
+
+jobs:
+  sync-statements:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore SQLite DB Cache
+        uses: actions/cache@v4
+        with:
+          path: statements.db
+          key: statements-db-${{ github.run_id }}
+          restore-keys: |
+            statements-db-
+
+      - name: Run Statement Pipeline
+        env:
+          IMAP_HOST: ${{ secrets.IMAP_HOST || 'imap.gmail.com' }}
+          IMAP_USER: ${{ secrets.IMAP_USER }}
+          IMAP_PASSWORD: ${{ secrets.IMAP_PASSWORD }}
+          SPREADSHEET_NAME_OR_ID: ${{ secrets.SPREADSHEET_NAME_OR_ID }}
+          SHEET_TAB_NAME: ${{ secrets.SHEET_TAB_NAME || 'CREDIT CARD PAYMENTS' }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          PWD_ENBD: ${{ secrets.PWD_ENBD }}
+          PWD_EI_CASHBACK: ${{ secrets.PWD_EI_CASHBACK }}
+          PWD_EI_RTA: ${{ secrets.PWD_EI_RTA }}
+          PWD_FAB_GEMS: ${{ secrets.PWD_FAB_GEMS }}
+          PWD_FAB_BLUE: ${{ secrets.PWD_FAB_BLUE }}
+          PWD_CBD: ${{ secrets.PWD_CBD }}
+          PWD_ADCB: ${{ secrets.PWD_ADCB }}
+        run: |
+          echo "$GOOGLE_SERVICE_ACCOUNT_JSON" > service_account.json
+          python main.py
