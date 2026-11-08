@@ -37,7 +37,7 @@ STATEMENT_RULES = [
     {
         "card_code": "FAB_GEMS",
         "sheet_col": "FAB - GEMS",
-        "subject_query": 'TEXT "Statement of FAB Card ending with 0556"',
+        "subject_query": 'TEXT "Statement of FAB Card"',
         "password": os.getenv("PWD_FAB_GEMS", ""),
         "parser": "fab"
     },

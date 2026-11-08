@@ -3,6 +3,10 @@ name = "credit-card-analyzer"
 version = "0.1.0"
 description = "Automated credit card statement sync and financial tracking with FastAPI"
 readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "Shyju Kanaprath", email = "shyjuk@users.noreply.github.com" }
+]
 requires-python = ">=3.11"
 dependencies = [
     "fastapi[standard]>=0.110.0",
