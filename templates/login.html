@@ -4,12 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Credit Card Statement Tracker - Authentication</title>
-    <!-- Tailwind CSS -->
+    <!-- System Theme Auto-Detection (runs synchronously in head to prevent FOUT) -->
+    <script src="/static/js/theme.js"></script>
+    <!-- Tailwind CSS with darkMode class configuration -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -20,100 +23,119 @@
         }
     </script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-emerald-500 selection:text-white" x-data="loginApp()" x-init="init()">
+<body class="bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen flex items-center justify-center p-4 selection:bg-emerald-500 selection:text-white transition-colors duration-200" x-data="loginApp()" x-init="init()">
+
+    <!-- Theme Toggle Floating Button -->
+    <div class="fixed top-4 right-4 z-50">
+        <button @click="toggleTheme()" :title="isDark ? 'Switch to Light Theme' : 'Switch to Dark Theme'"
+            class="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white shadow-sm hover:shadow transition flex items-center justify-center">
+            <template x-if="isDark">
+                <!-- Sun Icon -->
+                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                </svg>
+            </template>
+            <template x-if="!isDark">
+                <!-- Moon Icon -->
+                <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+            </template>
+        </button>
+    </div>
 
     <div class="w-full max-w-xl">
         
         <!-- Brand Header -->
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white shadow-xl shadow-emerald-900/40 mb-4 ring-1 ring-emerald-400/20">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-600 to-teal-400 text-white shadow-xl shadow-emerald-900/30 mb-4 ring-1 ring-emerald-400/20">
                 <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
                 </svg>
             </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white">Credit Card Statement Sync</h1>
-            <p class="text-sm text-slate-400 mt-1">Automated Statement Parsing &amp; Google Sheets Financial Tracker</p>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">Credit Card Statement Sync</h1>
+            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Automated Statement Parsing &amp; Google Sheets Financial Tracker</p>
         </div>
 
         <!-- Global Error Banner (e.g. from OAuth redirect) -->
-        <div x-show="errorMessage" style="display: none;" class="mb-6 p-4 rounded-2xl bg-rose-950/50 border border-rose-500/40 text-rose-300 text-xs flex items-start gap-3 shadow-xl">
-            <svg class="w-5 h-5 flex-shrink-0 text-rose-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div x-show="errorMessage" style="display: none;" class="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-950/50 dark:border-rose-500/40 dark:text-rose-300 text-xs flex items-start gap-3 shadow-sm">
+            <svg class="w-5 h-5 flex-shrink-0 text-rose-500 dark:text-rose-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
             <div class="flex-1">
                 <span class="font-semibold block">Authentication Notice:</span>
                 <span x-text="errorMessage"></span>
             </div>
-            <button @click="errorMessage = ''" class="text-slate-400 hover:text-white">&times;</button>
+            <button @click="errorMessage = ''" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">&times;</button>
         </div>
 
         <!-- Loading State during initial check -->
         <div x-show="initialLoading" class="text-center py-12">
-            <svg class="animate-spin h-8 w-8 text-emerald-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
+            <svg class="animate-spin h-8 w-8 text-emerald-600 dark:text-emerald-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
             </svg>
-            <p class="text-xs text-slate-400">Loading system status...</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Loading system status...</p>
         </div>
 
         <!-- ========================================================================= -->
         <!-- SCENARIO A: FIRST-TIME SETUP WIZARD (3 STEPS) -->
         <!-- ========================================================================= -->
-        <div x-show="!initialLoading && !setupStatus.setup_completed" style="display: none;" class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+        <div x-show="!initialLoading && !setupStatus.setup_completed" style="display: none;" class="bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl dark:shadow-2xl">
             
             <!-- Stepper Progress Header -->
             <div class="mb-8">
                 <div class="flex items-center justify-between text-xs font-semibold uppercase tracking-wider mb-3">
-                    <span class="text-emerald-400">First-Time Setup Wizard</span>
-                    <span class="text-slate-500" x-text="'Step ' + currentStep + ' of 3'"></span>
+                    <span class="text-emerald-600 dark:text-emerald-400">First-Time Setup Wizard</span>
+                    <span class="text-slate-500 dark:text-slate-400" x-text="'Step ' + currentStep + ' of 3'"></span>
                 </div>
                 
                 <!-- Step progress bars -->
                 <div class="grid grid-cols-3 gap-2">
-                    <div class="h-1.5 rounded-full transition-all duration-300" :class="currentStep >= 1 ? 'bg-emerald-500' : 'bg-slate-800'"></div>
-                    <div class="h-1.5 rounded-full transition-all duration-300" :class="currentStep >= 2 ? 'bg-emerald-500' : 'bg-slate-800'"></div>
-                    <div class="h-1.5 rounded-full transition-all duration-300" :class="currentStep >= 3 ? 'bg-emerald-500' : 'bg-slate-800'"></div>
+                    <div class="h-1.5 rounded-full transition-all duration-300" :class="currentStep >= 1 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'"></div>
+                    <div class="h-1.5 rounded-full transition-all duration-300" :class="currentStep >= 2 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'"></div>
+                    <div class="h-1.5 rounded-full transition-all duration-300" :class="currentStep >= 3 ? 'bg-emerald-500' : 'bg-slate-200 dark:bg-slate-800'"></div>
                 </div>
 
-                <div class="flex justify-between text-[11px] text-slate-400 mt-2 px-0.5">
-                    <span :class="currentStep === 1 ? 'text-emerald-300 font-semibold' : ''">1. Google Credentials &amp; SSO</span>
-                    <span :class="currentStep === 2 ? 'text-emerald-300 font-semibold' : ''">2. Tracker Sheet</span>
-                    <span :class="currentStep === 3 ? 'text-emerald-300 font-semibold' : ''">3. Health Check</span>
+                <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-2 px-0.5">
+                    <span :class="currentStep === 1 ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : ''">1. Google Credentials &amp; SSO</span>
+                    <span :class="currentStep === 2 ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : ''">2. Tracker Sheet</span>
+                    <span :class="currentStep === 3 ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : ''">3. Health Check</span>
                 </div>
             </div>
 
             <!-- STEP 1: Connect with Google -->
             <div x-show="currentStep === 1" class="space-y-6">
                 <div>
-                    <h2 class="text-lg font-bold text-white">Google OAuth Setup &amp; Sign-In</h2>
-                    <p class="text-xs text-slate-400 mt-1">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Google OAuth Setup &amp; Sign-In</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         Connect your personal Google account to ingest statement PDFs from Gmail and synchronize your Google Sheets tracker.
                     </p>
                 </div>
 
                 <!-- Google Cloud Deep Links Helper Accordion -->
-                <div class="p-3.5 rounded-xl bg-slate-800/40 border border-slate-800 text-[11px] space-y-2">
-                    <div class="flex items-center justify-between text-slate-300 font-semibold">
+                <div class="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-800 text-[11px] space-y-2">
+                    <div class="flex items-center justify-between text-slate-700 dark:text-slate-300 font-semibold">
                         <span>Google Cloud Console Helpers:</span>
-                        <button type="button" @click="copyCallbackUrl()" class="px-2 py-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 text-[10px] flex items-center gap-1 transition">
+                        <button type="button" @click="copyCallbackUrl()" class="px-2 py-1 rounded bg-slate-200 hover:bg-slate-300 text-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200 text-[10px] flex items-center gap-1 transition">
                             <template x-if="!copiedCallback">
                                 <span>Copy Redirect URI</span>
                             </template>
                             <template x-if="copiedCallback">
-                                <span class="text-emerald-400 font-bold">✓ Copied!</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-bold">✓ Copied!</span>
                             </template>
                         </button>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-slate-400">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-slate-500 dark:text-slate-400">
                         <a href="https://console.cloud.google.com/flows/enableapi?apiid=sheets.googleapis.com,drive.googleapis.com,gmail.googleapis.com" target="_blank"
-                            class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-between transition">
+                            class="p-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent flex items-center justify-between transition shadow-sm">
                             <span>1. Enable Sheets, Drive, Gmail APIs</span>
-                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         </a>
                         <a href="https://console.cloud.google.com/apis/credentials/oauthclient" target="_blank"
-                            class="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-between transition">
+                            class="p-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-transparent flex items-center justify-between transition shadow-sm">
                             <span>2. Create Web OAuth Client ID</span>
-                            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                            <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         </a>
                     </div>
                 </div>
@@ -121,9 +143,9 @@
                 <!-- DRAG-AND-DROP CLIENT_SECRET.JSON SECTION -->
                 <div class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Google Cloud OAuth Credentials</label>
-                        <span x-show="setupStatus.has_client_credentials" class="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Credentials Configured
+                        <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Google Cloud OAuth Credentials</label>
+                        <span x-show="setupStatus.has_client_credentials" class="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400"></span> Credentials Configured
                         </span>
                     </div>
 
@@ -133,19 +155,19 @@
                         @dragleave.prevent="isDragging = false"
                         @drop.prevent="handleSecretDrop($event)"
                         @click="$refs.secretFileInput.click()"
-                        :class="isDragging ? 'border-emerald-500 bg-emerald-950/30' : 'border-slate-700/80 bg-slate-800/40 hover:border-slate-600'"
+                        :class="isDragging ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/30' : 'border-slate-300 bg-slate-50/70 hover:border-slate-400 dark:border-slate-700/80 dark:bg-slate-800/40 dark:hover:border-slate-600'"
                         class="border-2 border-dashed rounded-2xl p-5 text-center cursor-pointer transition flex flex-col items-center justify-center gap-2 group">
                         
                         <input type="file" x-ref="secretFileInput" accept=".json" class="hidden" @change="handleSecretFileSelected($event)">
                         
-                        <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 group-hover:text-emerald-400 flex items-center justify-center transition">
+                        <div class="w-10 h-10 rounded-xl bg-white border border-slate-200 text-slate-500 group-hover:text-emerald-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300 dark:group-hover:text-emerald-400 flex items-center justify-center transition shadow-sm">
                             <template x-if="!uploadingSecret">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                                 </svg>
                             </template>
                             <template x-if="uploadingSecret">
-                                <svg class="animate-spin w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24">
+                                <svg class="animate-spin w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                 </svg>
@@ -153,23 +175,23 @@
                         </div>
 
                         <div>
-                            <p class="text-xs font-semibold text-slate-200">
-                                <span class="text-emerald-400 underline">Drop your client_secret_*.json file here</span> or click to browse
+                            <p class="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                <span class="text-emerald-600 dark:text-emerald-400 underline">Drop your client_secret_*.json file here</span> or click to browse
                             </p>
-                            <p class="text-[11px] text-slate-400 mt-0.5">Downloaded from Google Cloud Console &bull; OAuth 2.0 Client IDs</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Downloaded from Google Cloud Console &bull; OAuth 2.0 Client IDs</p>
                         </div>
                     </div>
 
                     <!-- Uploaded Info / Notice Card -->
                     <template x-if="uploadedSecretInfo">
                         <div class="p-3.5 rounded-xl border text-xs space-y-1.5"
-                            :class="uploadedSecretInfo.warning ? 'bg-amber-950/40 border-amber-500/40 text-amber-300' : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300'">
+                            :class="uploadedSecretInfo.warning ? 'bg-amber-50 border-amber-300 text-amber-800 dark:bg-amber-950/40 dark:border-amber-500/40 dark:text-amber-300' : 'bg-emerald-50 border-emerald-300 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-500/30 dark:text-emerald-300'">
                             <div class="flex items-center justify-between font-semibold">
                                 <span x-text="uploadedSecretInfo.message"></span>
                                 <span class="text-[10px] font-mono" x-text="uploadedSecretInfo.project_id"></span>
                             </div>
                             <template x-if="uploadedSecretInfo.warning">
-                                <p class="text-[11px] text-amber-200" x-text="uploadedSecretInfo.warning"></p>
+                                <p class="text-[11px] text-amber-700 dark:text-amber-200" x-text="uploadedSecretInfo.warning"></p>
                             </template>
                         </div>
                     </template>
@@ -178,7 +200,7 @@
                 <!-- Google SSO Action Button -->
                 <div>
                     <a href="/api/auth/google/login" :class="!setupStatus.has_client_credentials ? 'pointer-events-none opacity-50' : ''"
-                        class="w-full py-3.5 px-4 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 font-semibold rounded-2xl text-sm transition-all shadow-xl shadow-white/5 flex items-center justify-center gap-3">
+                        class="w-full py-3.5 px-4 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-900 border border-slate-300 dark:border-transparent font-semibold rounded-2xl text-sm transition-all shadow-md dark:shadow-xl dark:shadow-white/5 flex items-center justify-center gap-3">
                         <!-- Official Google "G" Logo -->
                         <svg class="w-5 h-5" viewBox="0 0 24 24">
                             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -190,7 +212,7 @@
                     </a>
                 </div>
 
-                <p class="text-[11px] text-center text-slate-500">
+                <p class="text-[11px] text-center text-slate-500 dark:text-slate-400">
                     Redirects to Google OAuth 2.0 consent screen with scopes for Drive (app files only), Sheets, and Gmail statement ingestion.
                 </p>
             </div>
@@ -198,66 +220,66 @@
             <!-- STEP 2: Provision Google Sheet from Template -->
             <div x-show="currentStep === 2" class="space-y-6">
                 <div>
-                    <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-medium mb-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
                         <span x-text="'Signed in as ' + (setupStatus.owner_email || 'Google User')"></span>
                     </div>
-                    <h2 class="text-lg font-bold text-white">Provision Tracker Spreadsheet</h2>
-                    <p class="text-xs text-slate-400 mt-1">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Provision Tracker Spreadsheet</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         Automatically upload and convert an Excel template into a native Google Sheet on your Google Drive.
                     </p>
                 </div>
 
                 <!-- Template Selection Options -->
                 <div class="space-y-3">
-                    <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Spreadsheet Title</label>
-                    <input type="text" x-model="templateForm.title" class="w-full px-3.5 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:ring-2 focus:ring-emerald-500">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Spreadsheet Title</label>
+                    <input type="text" x-model="templateForm.title" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500">
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                         <!-- Option A: Bundled Template -->
                         <div @click="templateForm.mode = 'bundled'"
-                            :class="templateForm.mode === 'bundled' ? 'border-emerald-500 bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-800 bg-slate-800/40 hover:border-slate-700'"
+                            :class="templateForm.mode === 'bundled' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700'"
                             class="p-4 rounded-2xl border cursor-pointer transition">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-white">Bundled Template</span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold">Recommended</span>
+                                <span class="text-xs font-bold text-slate-900 dark:text-white">Bundled Template</span>
+                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 font-semibold">Recommended</span>
                             </div>
-                            <p class="text-[11px] text-slate-400">Uses <code class="text-emerald-400">Credit Card Payment Tracker.xlsx</code> pre-structured with tabs for 2026, 2025, 2024, 2023.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Uses <code class="text-emerald-600 dark:text-emerald-400 font-mono">Credit Card Payment Tracker.xlsx</code> pre-structured with tabs for 2026, 2025, 2024, 2023.</p>
                         </div>
 
                         <!-- Option B: Custom Upload -->
                         <div @click="templateForm.mode = 'custom'"
-                            :class="templateForm.mode === 'custom' ? 'border-emerald-500 bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-800 bg-slate-800/40 hover:border-slate-700'"
+                            :class="templateForm.mode === 'custom' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700'"
                             class="p-4 rounded-2xl border cursor-pointer transition">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-white">Upload Custom .xlsx</span>
+                                <span class="text-xs font-bold text-slate-900 dark:text-white">Upload Custom .xlsx</span>
                             </div>
-                            <p class="text-[11px] text-slate-400">Upload your own Excel tracker template to convert directly to a Google Sheet.</p>
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Upload your own Excel tracker template to convert directly to a Google Sheet.</p>
                         </div>
                     </div>
 
                     <!-- Custom File Picker -->
                     <div x-show="templateForm.mode === 'custom'" class="pt-2">
-                        <input type="file" id="templateFileInput" accept=".xlsx" @change="handleFileSelected" class="text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700">
+                        <input type="file" id="templateFileInput" accept=".xlsx" @change="handleFileSelected" class="text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 dark:file:bg-slate-800 dark:file:text-slate-200 dark:hover:file:bg-slate-700">
                     </div>
                 </div>
 
                 <!-- Provision Success Banner (if already provisioned) -->
-                <div x-show="setupStatus.spreadsheet_url" class="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-2 text-xs">
+                <div x-show="setupStatus.spreadsheet_url" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-500/30 dark:text-emerald-300 space-y-2 text-xs">
                     <div class="flex items-center justify-between">
-                        <span class="text-emerald-300 font-semibold">✓ Google Sheet Provisioned</span>
-                        <a :href="setupStatus.spreadsheet_url" target="_blank" class="text-emerald-400 underline hover:text-emerald-300 flex items-center gap-1">
+                        <span class="text-emerald-800 dark:text-emerald-300 font-semibold">✓ Google Sheet Provisioned</span>
+                        <a :href="setupStatus.spreadsheet_url" target="_blank" class="text-emerald-700 dark:text-emerald-400 underline hover:text-emerald-900 dark:hover:text-emerald-300 flex items-center gap-1">
                             <span>Open in Google Sheets</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
                         </a>
                     </div>
-                    <p class="text-slate-300 font-mono text-[11px] truncate" x-text="setupStatus.spreadsheet_name + ' (ID: ' + setupStatus.spreadsheet_id + ')'"></p>
+                    <p class="text-slate-700 dark:text-slate-300 font-mono text-[11px] truncate" x-text="setupStatus.spreadsheet_name + ' (ID: ' + setupStatus.spreadsheet_id + ')'"></p>
                 </div>
 
                 <!-- Action Button -->
                 <div class="space-y-3">
                     <button @click="provisionTemplate()" :disabled="provisioning"
-                        class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl text-sm transition-all shadow-lg shadow-emerald-950 flex items-center justify-center gap-2 disabled:opacity-50">
+                        class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl text-sm transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50">
                         <template x-if="!provisioning">
                             <span x-text="setupStatus.spreadsheet_id ? 'Re-provision / Replace Sheet' : 'Provision Google Sheet Now'"></span>
                         </template>
@@ -270,7 +292,7 @@
                     </button>
 
                     <button x-show="setupStatus.spreadsheet_id" @click="currentStep = 3; runHealthCheck();"
-                        class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 font-semibold rounded-2xl text-xs transition flex items-center justify-center gap-2">
+                        class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:active:bg-slate-900 dark:text-slate-200 dark:border-transparent font-semibold rounded-2xl text-xs transition flex items-center justify-center gap-2">
                         <span>Continue to Connection Health Check &rarr;</span>
                     </button>
                 </div>
@@ -279,8 +301,8 @@
             <!-- STEP 3: Automated 3-Point Health Check & Launch -->
             <div x-show="currentStep === 3" class="space-y-6">
                 <div>
-                    <h2 class="text-lg font-bold text-white">Automated Health Check</h2>
-                    <p class="text-xs text-slate-400 mt-1">
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Automated Health Check</h2>
+                    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
                         Validating end-to-end connectivity across Google OAuth, Google Sheets API, and Gmail statement ingestion.
                     </p>
                 </div>
@@ -288,9 +310,9 @@
                 <!-- Checks List -->
                 <div class="space-y-3">
                     <template x-for="check in healthChecks" :key="check.name">
-                        <div class="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-start gap-3">
+                        <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 dark:bg-slate-800/60 dark:border-slate-700/60 flex items-start gap-3">
                             <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                                :class="check.success ? 'bg-emerald-500/20 text-emerald-400' : (checkingHealth ? 'bg-slate-700 text-slate-400' : 'bg-rose-500/20 text-rose-400')">
+                                :class="check.success ? 'bg-emerald-500/15 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400' : (checkingHealth ? 'bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400' : 'bg-rose-500/15 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400')">
                                 <template x-if="check.success">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                 </template>
@@ -303,12 +325,12 @@
                             </div>
                             <div class="flex-1 text-xs">
                                 <div class="flex items-center justify-between">
-                                    <span class="font-bold text-white" x-text="check.name"></span>
+                                    <span class="font-bold text-slate-900 dark:text-white" x-text="check.name"></span>
                                     <span class="text-[10px] font-semibold uppercase tracking-wider"
-                                        :class="check.success ? 'text-emerald-400' : (checkingHealth ? 'text-slate-400' : 'text-rose-400')"
+                                        :class="check.success ? 'text-emerald-600 dark:text-emerald-400' : (checkingHealth ? 'text-slate-500 dark:text-slate-400' : 'text-rose-600 dark:text-rose-400')"
                                         x-text="check.success ? 'Passed' : (checkingHealth ? 'Checking...' : 'Attention')"></span>
                                 </div>
-                                <p class="text-slate-400 mt-0.5 text-[11px]" x-text="check.detail || 'Verifying component...'"></p>
+                                <p class="text-slate-500 dark:text-slate-400 mt-0.5 text-[11px]" x-text="check.detail || 'Verifying component...'"></p>
                             </div>
                         </div>
                     </template>
@@ -317,16 +339,16 @@
                 <!-- Launch Button or Retry Button -->
                 <div class="space-y-3">
                     <button x-show="allChecksPassed" @click="launchDashboard()"
-                        class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl text-sm transition-all shadow-xl shadow-emerald-950 flex items-center justify-center gap-2">
+                        class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl text-sm transition-all shadow-md flex items-center justify-center gap-2">
                         <span>Setup Complete &bull; Launch Dashboard &rarr;</span>
                     </button>
 
                     <button x-show="!allChecksPassed" @click="runHealthCheck()" :disabled="checkingHealth"
-                        class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-slate-200 font-semibold rounded-2xl text-xs transition flex items-center justify-center gap-2">
+                        class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:active:bg-slate-900 dark:text-slate-200 dark:border-transparent font-semibold rounded-2xl text-xs transition flex items-center justify-center gap-2">
                         <span x-text="checkingHealth ? 'Running diagnostics...' : 'Retry Health Check'"></span>
                     </button>
 
-                    <button @click="currentStep = 2" class="w-full py-2 text-xs text-slate-400 hover:text-white transition text-center">
+                    <button @click="currentStep = 2" class="w-full py-2 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-center">
                         &larr; Back to Template Provisioning
                     </button>
                 </div>
@@ -337,29 +359,29 @@
         <!-- ========================================================================= -->
         <!-- SCENARIO B: REGULAR RETURNING USER LOGIN (SETUP COMPLETED) -->
         <!-- ========================================================================= -->
-        <div x-show="!initialLoading && setupStatus.setup_completed" style="display: none;" class="bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-7 sm:p-8 shadow-2xl space-y-6">
+        <div x-show="!initialLoading && setupStatus.setup_completed" style="display: none;" class="bg-white/95 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-7 sm:p-8 shadow-xl dark:shadow-2xl space-y-6">
             
             <div class="text-center">
-                <h2 class="text-lg font-bold text-white">Welcome Back</h2>
-                <p class="text-xs text-slate-400 mt-1">Sign in with your authorized Google account to access statement analysis and tracking.</p>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Welcome Back</h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Sign in with your authorized Google account to access statement analysis and tracking.</p>
             </div>
 
             <!-- Registered Owner Display -->
-            <div class="p-4 rounded-2xl bg-slate-800/60 border border-slate-700/60 flex items-center gap-3.5">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200 dark:bg-slate-800/60 dark:border-slate-700/60 flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center font-bold text-white text-sm shadow-md">
                     <span x-text="setupStatus.owner_email ? setupStatus.owner_email.charAt(0).toUpperCase() : 'G'"></span>
                 </div>
                 <div class="flex-1 min-w-0">
-                    <span class="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase block">Registered Account</span>
-                    <span class="text-xs font-semibold text-white block truncate" x-text="setupStatus.owner_email || 'Authorized Owner'"></span>
-                    <span class="text-[10px] text-slate-400 block truncate" x-text="'Linked Sheet: ' + (setupStatus.spreadsheet_name || 'Credit Card Tracker')"></span>
+                    <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold tracking-wider uppercase block">Registered Account</span>
+                    <span class="text-xs font-semibold text-slate-900 dark:text-white block truncate" x-text="setupStatus.owner_email || 'Authorized Owner'"></span>
+                    <span class="text-[10px] text-slate-500 dark:text-slate-400 block truncate" x-text="'Linked Sheet: ' + (setupStatus.spreadsheet_name || 'Credit Card Tracker')"></span>
                 </div>
             </div>
 
             <!-- Google SSO Button -->
             <div>
                 <a href="/api/auth/google/login"
-                    class="w-full py-3.5 px-4 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-900 font-semibold rounded-2xl text-sm transition-all shadow-xl shadow-white/5 flex items-center justify-center gap-3">
+                    class="w-full py-3.5 px-4 bg-white hover:bg-slate-50 active:bg-slate-100 text-slate-900 border border-slate-300 dark:border-transparent font-semibold rounded-2xl text-sm transition-all shadow-md dark:shadow-xl dark:shadow-white/5 flex items-center justify-center gap-3">
                     <svg class="w-5 h-5" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                         <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -373,14 +395,14 @@
             <!-- Footer Re-run option (only shown if ENABLE_SETUP_WIZARD_RESET=true in .env) -->
             <template x-if="setupStatus.allow_setup_reset">
                 <div class="text-center pt-2">
-                    <button @click="setupStatus.setup_completed = false; currentStep = 1;" class="text-[11px] text-slate-500 hover:text-slate-400 transition underline">
+                    <button @click="setupStatus.setup_completed = false; currentStep = 1;" class="text-[11px] text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition underline">
                         Re-open Setup Wizard / Change Spreadsheet
                     </button>
                 </div>
             </template>
         </div>
 
-        <p class="text-center text-xs text-slate-600 mt-6">&copy; Credit Card Statement Tracker &bull; Google Drive &amp; Sheets Synced</p>
+        <p class="text-center text-xs text-slate-500 dark:text-slate-500 mt-6">&copy; Credit Card Statement Tracker &bull; Google Drive &amp; Sheets Synced</p>
     </div>
 
     <script>
@@ -393,6 +415,12 @@
                 uploadingSecret: false,
                 uploadedSecretInfo: null,
                 copiedCallback: false,
+                isDark: document.documentElement.classList.contains('dark'),
+
+                toggleTheme() {
+                    this.isDark = window.toggleTheme() === 'dark';
+                },
+
                 setupStatus: {
                     has_client_credentials: true,
                     setup_completed: false,
@@ -417,6 +445,10 @@
                     { name: 'Gmail Ingestion API', detail: 'Pending verification', success: false }
                 ],
                 async init() {
+                    window.addEventListener('theme-changed', (e) => {
+                        this.isDark = e.detail.theme === 'dark';
+                    });
+
                     const params = new URLSearchParams(window.location.search);
                     const errorParam = params.get('error');
                     const detailParam = params.get('detail');

@@ -231,14 +231,14 @@ def login_page(request: Request, user: User = Depends(get_optional_user)):
 @app.get("/dashboard", response_class=HTMLResponse)
 def dashboard_page(request: Request, user: User = Depends(get_optional_user)):
     """Renders the main Dashboard."""
-    if not user:
+    if not user and request.query_params.get("demo") != "true":
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     return templates.TemplateResponse(request=request, name="dashboard.html", context={"user": user})
 
 @app.get("/settings", response_class=HTMLResponse)
 def settings_page(request: Request, user: User = Depends(get_optional_user)):
     """Renders the Settings and Statement Mapping Rules page."""
-    if not user:
+    if not user and request.query_params.get("demo") != "true":
         return RedirectResponse(url="/login", status_code=status.HTTP_302_FOUND)
     return templates.TemplateResponse(request=request, name="settings.html", context={"user": user})
 

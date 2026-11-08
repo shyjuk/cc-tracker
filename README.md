@@ -25,7 +25,7 @@ A modern, self-hosted web application and pipeline to automatically ingest passw
   2. Automatic Google Sheet provisioning from bundled/custom Excel `.xlsx` templates.
   3. 3-point live health check verifying Identity, Drive/Sheets read-write, and Gmail label access.
 - **Minimal Permissions:** Uses Google Drive `drive.file` and `gmail.readonly` scopes only — zero access to your other Google Drive files or broad spreadsheets.
-- **Interactive Web Dashboard:** Dark-theme UI built with Tailwind CSS and Alpine.js showing:
+- **Interactive Web Dashboard:** Light & Dark themes with automatic browser/system theme preference detection (`prefers-color-scheme`) and persistent manual toggle. Built with Tailwind CSS and Alpine.js showing:
   - Monthly balance matrix mirroring Google Sheets
   - Statement transaction inspector with debit/credit badges
   - Real-time sync trigger with live progress indicator
@@ -37,8 +37,13 @@ A modern, self-hosted web application and pipeline to automatically ingest passw
 ## 📸 Screenshots
 
 ### 📊 Financial Dashboard
-Live monthly credit card payment matrix mirroring your Google Sheet, KPI summary cards, and itemized transaction inspector.
+Live monthly credit card payment matrix mirroring your Google Sheet, KPI summary cards, and itemized transaction inspector. Supports both Dark and Light themes automatically matching your browser/OS preference.
+
+**Dark Mode:**
 ![Financial Dashboard](docs/screenshots/dashboard.png)
+
+**Light Mode:**
+![Financial Dashboard Light](docs/screenshots/dashboard_light.png)
 
 ### 🧙‍♂️ First-Time Setup Wizard (Step 1 of 3)
 1-click Google Cloud Console helpers, drag-and-drop `client_secret.json` credentials uploader, and Google SSO sign-in.
