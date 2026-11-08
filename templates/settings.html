@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Statement Mapping Rules &amp; Integrations</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: { 50: '#ecfdf5', 100: '#d1fae5', 500: '#10b981', 600: '#059669', 700: '#047857' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-emerald-500 selection:text-white" x-data="settingsApp()" x-init="init()">
+
+    <!-- Top Navigation -->
+    <nav class="border-b border-slate-800 bg-slate-900/70 backdrop-blur-md sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-6">
+                <a href="/dashboard" class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-teal-400 flex items-center justify-center text-white shadow-md shadow-emerald-900/30">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <span class="font-bold text-base tracking-tight text-white block leading-tight">Card Tracker</span>
+                        <span class="text-[10px] text-emerald-400 font-medium tracking-wider uppercase block">Sync &amp; Analyze</span>
+                    </div>
+                </a>
+
+                <div class="hidden sm:flex items-center gap-1 border-l border-slate-800 pl-6">
+                    <a href="/dashboard" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800/60 transition">Dashboard</a>
+                    <a href="/settings" class="px-3 py-1.5 rounded-lg text-sm font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Settings &amp; Rules</a>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <a href="/dashboard" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 transition">
+                    &larr; Back to Dashboard
+                </a>
+                <button @click="logout()" title="Logout" class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Tabs Header -->
+        <div class="flex items-center gap-2 border-b border-slate-800 pb-3">
+            <button @click="activeTab = 'rules'"
+                :class="activeTab === 'rules' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'text-slate-400 hover:text-white border-transparent'"
+                class="px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                <span>Statement Mapping Rules</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] bg-slate-800 text-slate-300" x-text="rules.length"></span>
+            </button>
+
+            <button @click="activeTab = 'integrations'"
+                :class="activeTab === 'integrations' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'text-slate-400 hover:text-white border-transparent'"
+                class="px-4 py-2 rounded-xl text-xs font-semibold border transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                <span>Connection Diagnostics</span>
+            </button>
+        </div>
+
+        <!-- Global Alert Message -->
+        <div x-show="alertMessage" style="display: none;"
+            :class="alertType === 'success' ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300' : 'bg-rose-950/40 border-rose-500/30 text-rose-300'"
+            class="p-4 rounded-xl border text-xs flex items-center justify-between shadow-lg">
+            <span x-text="alertMessage"></span>
+            <button @click="alertMessage = ''" class="text-slate-400 hover:text-white">&times;</button>
+        </div>
+
+        <!-- TAB 1: Statement Mapping Rules -->
+        <div x-show="activeTab === 'rules'" class="space-y-4">
+            
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-white">Configured Credit Card Rules</h2>
+                    <p class="text-xs text-slate-400">Manage how email statements are discovered, decrypted, parsed, and mapped to Google Sheet columns</p>
+                </div>
+                <button @click="openRuleModal()"
+                    class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-950 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    <span>Add New Rule</span>
+                </button>
+            </div>
+
+            <!-- Rules Table -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60 shadow-xl">
+                <table class="w-full text-left text-xs whitespace-nowrap">
+                    <thead class="bg-slate-800/80 text-slate-300 font-semibold uppercase tracking-wider border-b border-slate-800">
+                        <tr>
+                            <th class="py-3 px-4">Card Code</th>
+                            <th class="py-3 px-4">Sheet Column</th>
+                            <th class="py-3 px-4">Search Query (IMAP)</th>
+                            <th class="py-3 px-4">PDF Password</th>
+                            <th class="py-3 px-4">Parser</th>
+                            <th class="py-3 px-4 text-center">Status</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60">
+                        <template x-if="rules.length === 0">
+                            <tr>
+                                <td colspan="7" class="py-8 text-center text-slate-500">No card rules defined. Click "Add New Rule" above to create one.</td>
+                            </tr>
+                        </template>
+                        <template x-for="r in rules" :key="r.id">
+                            <tr class="hover:bg-slate-800/30">
+                                <td class="py-3.5 px-4 font-bold text-white">
+                                    <span x-text="r.card_code"></span>
+                                </td>
+                                <td class="py-3.5 px-4 text-emerald-400 font-medium" x-text="r.sheet_col"></td>
+                                <td class="py-3.5 px-4 font-mono text-slate-300">
+                                    <span class="px-2 py-0.5 rounded bg-slate-800 text-[11px]" x-text="r.subject_query"></span>
+                                </td>
+                                <td class="py-3.5 px-4 text-slate-400 font-mono">
+                                    <span x-text="r.has_password ? '••••••••' : '(None)'" :class="r.has_password ? 'text-slate-300' : 'text-slate-600'"></span>
+                                </td>
+                                <td class="py-3.5 px-4">
+                                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                        x-text="r.parser"></span>
+                                </td>
+                                <td class="py-3.5 px-4 text-center">
+                                    <button @click="toggleRuleActive(r)"
+                                        :class="r.is_active ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-500 border-slate-700'"
+                                        class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold border transition">
+                                        <span x-text="r.is_active ? 'Active' : 'Disabled'"></span>
+                                    </button>
+                                </td>
+                                <td class="py-3.5 px-4 text-right space-x-1">
+                                    <button @click="testRuleDirectly(r)" title="Test Query against Gmail"
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    </button>
+                                    <button @click="openRuleModal(r)" title="Edit Rule"
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-slate-800 transition">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </button>
+                                    <button @click="deleteRule(r.id, r.card_code)" title="Delete Rule"
+                                        class="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: Diagnostics & Google Integrations -->
+        <div x-show="activeTab === 'integrations'" class="grid grid-cols-1 md:grid-cols-2 gap-6" style="display: none;">
+            
+            <!-- Gmail Connection Card -->
+            <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-xl space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Gmail Statement Ingestion</h3>
+                            <p class="text-xs text-slate-400">Statement mailbox connection</p>
+                        </div>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                        :class="setupStatus?.has_google_token ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'"
+                        x-text="setupStatus?.has_google_token ? 'OAuth Active' : 'IMAP Fallback'"></span>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between py-1 border-b border-slate-800/50">
+                        <span class="text-slate-400">Connected Account</span>
+                        <span class="font-mono text-emerald-400 font-semibold" x-text="setupStatus?.owner_email || 'Not configured'"></span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-800/50">
+                        <span class="text-slate-400">Target Label</span>
+                        <span class="font-mono text-slate-200" x-text="setupStatus?.gmail_label || 'Statements'"></span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-800/50">
+                        <span class="text-slate-400">Primary Protocol</span>
+                        <span class="text-slate-200">Gmail REST API (OAuth 2.0)</span>
+                    </div>
+                </div>
+
+                <!-- Test Result Box -->
+                <div x-show="imapTestResult" class="p-3 rounded-xl text-xs"
+                    :class="imapTestResult?.success ? 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-300' : 'bg-rose-950/40 border border-rose-500/30 text-rose-300'">
+                    <span x-text="imapTestResult?.message || imapTestResult?.error"></span>
+                </div>
+
+                <button @click="testImapConnection()" :disabled="testingImap"
+                    class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 transition disabled:opacity-50">
+                    <span x-show="!testingImap">Test Gmail Ingestion</span>
+                    <span x-show="testingImap" class="flex items-center gap-2">
+                        <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        Querying Gmail...
+                    </span>
+                </button>
+            </div>
+
+            <!-- Google Sheets Connection Card -->
+            <div class="p-6 rounded-2xl bg-slate-900/60 border border-slate-800/80 shadow-xl space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Google Sheets API</h3>
+                            <p class="text-xs text-slate-400">Monthly tracker synchronized target</p>
+                        </div>
+                    </div>
+                    <template x-if="setupStatus?.spreadsheet_url">
+                        <a :href="setupStatus.spreadsheet_url" target="_blank" class="text-xs text-emerald-400 hover:text-emerald-300 underline flex items-center gap-1">
+                            <span>Open Sheet</span>
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                        </a>
+                    </template>
+                </div>
+
+                <div class="space-y-2 text-xs">
+                    <div class="flex justify-between py-1 border-b border-slate-800/50">
+                        <span class="text-slate-400">Spreadsheet Name</span>
+                        <span class="text-slate-200 font-medium truncate max-w-[200px]" x-text="setupStatus?.spreadsheet_name || 'Credit Card Payment Tracker'"></span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-800/50">
+                        <span class="text-slate-400">Spreadsheet ID</span>
+                        <span class="font-mono text-emerald-400 text-[11px] truncate max-w-[200px]" x-text="setupStatus?.spreadsheet_id || 'Auto-detected'"></span>
+                    </div>
+                    <div class="flex justify-between py-1 border-b border-slate-800/50">
+                        <span class="text-slate-400">Authorization</span>
+                        <span class="text-slate-200">OAuth 2.0 (Drive File Scope)</span>
+                    </div>
+                </div>
+
+                <!-- Test Sheets Result Box -->
+                <div x-show="sheetsTestResult" class="p-3 rounded-xl text-xs"
+                    :class="sheetsTestResult?.success ? 'bg-emerald-950/40 border border-emerald-500/30 text-emerald-300' : 'bg-rose-950/40 border border-rose-500/30 text-rose-300'">
+                    <span x-text="sheetsTestResult?.message || sheetsTestResult?.error"></span>
+                    <template x-if="sheetsTestResult?.available_tabs">
+                        <div class="mt-1 text-[11px] text-slate-400">
+                            Available Year Tabs: <span class="font-mono text-slate-300" x-text="sheetsTestResult.available_tabs.join(', ')"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <button @click="testSheetsConnection()" :disabled="testingSheets"
+                    class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white font-medium rounded-xl text-xs flex items-center justify-center gap-2 transition disabled:opacity-50">
+                    <span x-show="!testingSheets">Test Sheets Connection</span>
+                    <span x-show="testingSheets" class="flex items-center gap-2">
+                        <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                        Verifying Worksheets...
+                    </span>
+                </button>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Add / Edit Rule Modal -->
+    <div x-show="ruleModalOpen" style="display: none;"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm"
+        x-transition:enter="transition ease-out duration-200"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0">
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl flex flex-col"
+            @click.away="ruleModalOpen = false">
+            
+            <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+                <h3 class="text-base font-bold text-white" x-text="editingRuleId ? 'Edit Card Mapping Rule' : 'Add New Card Mapping Rule'"></h3>
+                <button @click="ruleModalOpen = false" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <form @submit.prevent="saveRule()" class="p-5 space-y-4">
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Card Code</label>
+                        <input type="text" x-model="ruleForm.card_code" required placeholder="e.g. FAB_BLUE"
+                            class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Sheet Column Header</label>
+                        <input type="text" x-model="ruleForm.sheet_col" required placeholder="e.g. FAB - Blue"
+                            class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">Search Query (IMAP)</label>
+                        <button type="button" @click="testCurrentQuery()" :disabled="testingQuery"
+                            class="text-[11px] font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 disabled:opacity-50">
+                            <span x-show="!testingQuery">&#x25B6; Test Query in Gmail</span>
+                            <span x-show="testingQuery">Testing...</span>
+                        </button>
+                    </div>
+                    <input type="text" x-model="ruleForm.subject_query" required placeholder='TEXT "Blue"'
+                        class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    <p class="text-[11px] text-slate-500 mt-1">E.g., <code class="text-slate-400 font-mono">TEXT "Emirates NBD"</code> or <code class="text-slate-400 font-mono">TEXT "GEMS"</code></p>
+                </div>
+
+                <!-- Live Test Results Box -->
+                <div x-show="queryTestResult" style="display: none;" class="p-3 rounded-xl text-xs border"
+                    :class="queryTestResult?.found ? 'bg-emerald-950/40 border-emerald-500/30 text-emerald-300' : 'bg-amber-950/40 border-amber-500/30 text-amber-300'">
+                    <div class="font-medium" x-text="queryTestResult?.message || queryTestResult?.error"></div>
+                    <template x-if="queryTestResult?.parsed">
+                        <div class="mt-1 text-[11px] text-slate-400 font-mono">
+                            Parsed: <span x-text="queryTestResult.parsed.month + ' ' + queryTestResult.parsed.year"></span> &bull; Total: <span class="text-emerald-400" x-text="queryTestResult.parsed.total_due + ' AED'"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">PDF Password</label>
+                        <input type="text" x-model="ruleForm.password" placeholder="Password or blank"
+                            class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1">Parser</label>
+                        <select x-model="ruleForm.parser" required
+                            class="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                            <template x-for="p in parsers" :key="p">
+                                <option :value="p" x-text="p"></option>
+                            </template>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2 pt-2">
+                    <input type="checkbox" id="isActiveCheck" x-model="ruleForm.is_active" class="rounded bg-slate-800 border-slate-700 text-emerald-500 focus:ring-emerald-500">
+                    <label for="isActiveCheck" class="text-xs text-slate-300 font-medium">Enable Rule (active in sync pipeline)</label>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 flex justify-end gap-2">
+                    <button type="button" @click="ruleModalOpen = false"
+                        class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition">
+                        Cancel
+                    </button>
+                    <button type="submit" :disabled="savingRule"
+                        class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-semibold shadow-lg shadow-emerald-950 transition disabled:opacity-50">
+                        <span x-text="savingRule ? 'Saving...' : 'Save Rule'"></span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        function settingsApp() {
+            return {
+                activeTab: 'rules',
+                rules: [],
+                parsers: ['emirates_islamic', 'enbd', 'fab', 'adcb', 'cbd'],
+                ruleModalOpen: false,
+                editingRuleId: null,
+                savingRule: false,
+                testingQuery: false,
+                queryTestResult: null,
+                alertMessage: '',
+                alertType: 'success',
+
+                testingImap: false,
+                imapTestResult: null,
+                testingSheets: false,
+                sheetsTestResult: null,
+                setupStatus: null,
+
+                ruleForm: {
+                    card_code: '',
+                    sheet_col: '',
+                    subject_query: '',
+                    password: '',
+                    parser: 'emirates_islamic',
+                    is_active: true
+                },
+
+                async init() {
+                    await this.checkAuth();
+                    await this.fetchSetupStatus();
+                    await this.fetchRules();
+                    await this.fetchParsers();
+                },
+
+                async fetchSetupStatus() {
+                    try {
+                        const res = await fetch('/api/setup/status');
+                        if (res.ok) {
+                            this.setupStatus = await res.json();
+                        }
+                    } catch (e) {
+                        console.error('Error fetching setup status:', e);
+                    }
+                },
+
+                async checkAuth() {
+                    try {
+                        const res = await fetch('/api/auth/me');
+                        if (!res.ok) throw new Error('Not authenticated');
+                    } catch (e) {
+                        window.location.href = '/login';
+                    }
+                },
+
+                async fetchRules() {
+                    try {
+                        const res = await fetch('/api/rules');
+                        if (res.ok) this.rules = await res.json();
+                    } catch (e) {
+                        console.error('Error fetching rules:', e);
+                    }
+                },
+
+                async fetchParsers() {
+                    try {
+                        const res = await fetch('/api/rules/parsers');
+                        if (res.ok) this.parsers = await res.json();
+                    } catch (e) {
+                        console.error('Error fetching parsers:', e);
+                    }
+                },
+
+                openRuleModal(rule = null) {
+                    this.queryTestResult = null;
+                    if (rule) {
+                        this.editingRuleId = rule.id;
+                        this.ruleForm = {
+                            card_code: rule.card_code,
+                            sheet_col: rule.sheet_col,
+                            subject_query: rule.subject_query,
+                            password: rule.password || '',
+                            parser: rule.parser,
+                            is_active: rule.is_active
+                        };
+                    } else {
+                        this.editingRuleId = null;
+                        this.ruleForm = {
+                            card_code: '',
+                            sheet_col: '',
+                            subject_query: 'TEXT ""',
+                            password: '',
+                            parser: 'emirates_islamic',
+                            is_active: true
+                        };
+                    }
+                    this.ruleModalOpen = true;
+                },
+
+                async saveRule() {
+                    this.savingRule = true;
+                    try {
+                        const url = this.editingRuleId ? `/api/rules/${this.editingRuleId}` : '/api/rules';
+                        const method = this.editingRuleId ? 'PUT' : 'POST';
+                        
+                        const res = await fetch(url, {
+                            method: method,
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(this.ruleForm)
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.detail || 'Failed to save rule');
+
+                        this.showAlert(data.message || 'Rule saved successfully.', 'success');
+                        this.ruleModalOpen = false;
+                        await this.fetchRules();
+                    } catch (e) {
+                        this.showAlert(e.message, 'error');
+                    } finally {
+                        this.savingRule = false;
+                    }
+                },
+
+                async toggleRuleActive(rule) {
+                    try {
+                        const res = await fetch(`/api/rules/${rule.id}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ is_active: !rule.is_active })
+                        });
+                        if (res.ok) {
+                            rule.is_active = !rule.is_active;
+                        }
+                    } catch (e) {
+                        console.error('Error toggling rule:', e);
+                    }
+                },
+
+                async deleteRule(ruleId, cardCode) {
+                    if (!confirm(`Are you sure you want to delete rule for ${cardCode}?`)) return;
+                    try {
+                        const res = await fetch(`/api/rules/${ruleId}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            this.showAlert(`Rule for ${cardCode} deleted.`, 'success');
+                            await this.fetchRules();
+                        }
+                    } catch (e) {
+                        this.showAlert(e.message, 'error');
+                    }
+                },
+
+                async testCurrentQuery() {
+                    if (!this.ruleForm.subject_query) return;
+                    this.testingQuery = true;
+                    this.queryTestResult = null;
+                    try {
+                        const res = await fetch('/api/rules/test', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                query: this.ruleForm.subject_query,
+                                password: this.ruleForm.password,
+                                parser: this.ruleForm.parser
+                            })
+                        });
+                        this.queryTestResult = await res.json();
+                    } catch (e) {
+                        this.queryTestResult = { found: false, error: e.message };
+                    } finally {
+                        this.testingQuery = false;
+                    }
+                },
+
+                async testRuleDirectly(rule) {
+                    this.showAlert(`Testing query [${rule.subject_query}] in Gmail...`, 'success');
+                    try {
+                        const res = await fetch('/api/rules/test', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                query: rule.subject_query,
+                                password: rule.password,
+                                parser: rule.parser
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.found) {
+                            this.showAlert(`✓ ${rule.card_code}: Found matching email and PDF (${data.pdf_size.toLocaleString()} bytes).`, 'success');
+                        } else {
+                            this.showAlert(`⚠️ ${rule.card_code}: ${data.message || data.error}`, 'error');
+                        }
+                    } catch (e) {
+                        this.showAlert(`Test failed: ${e.message}`, 'error');
+                    }
+                },
+
+                async testImapConnection() {
+                    this.testingImap = true;
+                    this.imapTestResult = null;
+                    try {
+                        const res = await fetch('/api/settings/test-imap', { method: 'POST' });
+                        this.imapTestResult = await res.json();
+                    } catch (e) {
+                        this.imapTestResult = { success: false, error: e.message };
+                    } finally {
+                        this.testingImap = false;
+                    }
+                },
+
+                async testSheetsConnection() {
+                    this.testingSheets = true;
+                    this.sheetsTestResult = null;
+                    try {
+                        const res = await fetch('/api/settings/test-sheets', { method: 'POST' });
+                        this.sheetsTestResult = await res.json();
+                    } catch (e) {
+                        this.sheetsTestResult = { success: false, error: e.message };
+                    } finally {
+                        this.testingSheets = false;
+                    }
+                },
+
+                showAlert(msg, type = 'success') {
+                    this.alertMessage = msg;
+                    this.alertType = type;
+                    setTimeout(() => { this.alertMessage = ''; }, 6000);
+                },
+
+                async logout() {
+                    try {
+                        await fetch('/api/auth/logout', { method: 'POST' });
+                        window.location.href = '/login';
+                    } catch (e) {
+                        window.location.href = '/login';
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
