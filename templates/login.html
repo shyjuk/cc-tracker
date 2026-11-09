@@ -63,7 +63,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
             <div class="flex-1">
-                <span class="font-semibold block">Authentication Notice:</span>
+                <span class="font-semibold block">Notice:</span>
                 <span x-text="errorMessage"></span>
             </div>
             <button @click="errorMessage = ''" class="text-slate-400 hover:text-slate-700 dark:hover:text-white">&times;</button>
@@ -98,7 +98,7 @@
                 </div>
 
                 <div class="flex justify-between text-[11px] text-slate-500 dark:text-slate-400 mt-2 px-0.5">
-                    <span :class="currentStep === 1 ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : ''">1. Google Credentials &amp; SSO</span>
+                    <span :class="currentStep === 1 ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : ''">1. Google Credentials</span>
                     <span :class="currentStep === 2 ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : ''">2. Tracker Sheet</span>
                     <span :class="currentStep === 3 ? 'text-emerald-600 dark:text-emerald-300 font-semibold' : ''">3. Health Check</span>
                 </div>
@@ -213,61 +213,144 @@
                 </div>
 
                 <p class="text-[11px] text-center text-slate-500 dark:text-slate-400">
-                    Redirects to Google OAuth 2.0 consent screen with scopes for Drive (app files only), Sheets, and Gmail statement ingestion.
+                    Redirects to Google OAuth 2.0 consent screen with scopes for Drive, Sheets, and Gmail statement ingestion.
                 </p>
             </div>
 
-            <!-- STEP 2: Provision Google Sheet from Template -->
+            <!-- STEP 2: Configure Tracker Spreadsheet -->
             <div x-show="currentStep === 2" class="space-y-6">
                 <div>
                     <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-medium mb-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
                         <span x-text="'Signed in as ' + (setupStatus.owner_email || 'Google User')"></span>
                     </div>
-                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Provision Tracker Spreadsheet</h2>
+                    <h2 class="text-lg font-bold text-slate-900 dark:text-white">Connect Tracker Spreadsheet</h2>
                     <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                        Automatically upload and convert an Excel template into a native Google Sheet on your Google Drive.
+                        Select an existing Google Sheet on your Google Drive, or automatically provision a new one from an Excel template.
                     </p>
                 </div>
 
-                <!-- Template Selection Options -->
-                <div class="space-y-3">
-                    <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Spreadsheet Title</label>
-                    <input type="text" x-model="templateForm.title" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500">
-                    
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                        <!-- Option A: Bundled Template -->
-                        <div @click="templateForm.mode = 'bundled'"
-                            :class="templateForm.mode === 'bundled' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700'"
-                            class="p-4 rounded-2xl border cursor-pointer transition">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-slate-900 dark:text-white">Bundled Template</span>
-                                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 font-semibold">Recommended</span>
+                <!-- 3 Options: Existing Sheet | Bundled Template | Custom .xlsx Upload -->
+                <div class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <!-- Option A: Select Existing Google Sheet -->
+                        <div @click="templateForm.mode = 'existing'; if (!driveSheets.length) fetchDriveSheets();"
+                            :class="templateForm.mode === 'existing' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700'"
+                            class="p-3.5 rounded-2xl border cursor-pointer transition flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-bold text-slate-900 dark:text-white">Existing Sheet</span>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 font-semibold">Select</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Pick from your Google Drive or paste any Sheet link/ID.</p>
                             </div>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Uses <code class="text-emerald-600 dark:text-emerald-400 font-mono">Credit Card Payment Tracker.xlsx</code> pre-structured with tabs for 2026, 2025, 2024, 2023.</p>
                         </div>
 
-                        <!-- Option B: Custom Upload -->
+                        <!-- Option B: Bundled Template -->
+                        <div @click="templateForm.mode = 'bundled'"
+                            :class="templateForm.mode === 'bundled' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700'"
+                            class="p-3.5 rounded-2xl border cursor-pointer transition flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-bold text-slate-900 dark:text-white">Bundled Template</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Create a new sheet with tabs for 2026-2023.</p>
+                            </div>
+                        </div>
+
+                        <!-- Option C: Custom Upload -->
                         <div @click="templateForm.mode = 'custom'"
                             :class="templateForm.mode === 'custom' ? 'border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/20 ring-1 ring-emerald-500/30' : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-800/40 dark:hover:border-slate-700'"
-                            class="p-4 rounded-2xl border cursor-pointer transition">
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-slate-900 dark:text-white">Upload Custom .xlsx</span>
+                            class="p-3.5 rounded-2xl border cursor-pointer transition flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <span class="text-xs font-bold text-slate-900 dark:text-white">Upload .xlsx</span>
+                                </div>
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Upload your custom Excel file to convert to a Sheet.</p>
                             </div>
-                            <p class="text-[11px] text-slate-500 dark:text-slate-400">Upload your own Excel tracker template to convert directly to a Google Sheet.</p>
                         </div>
                     </div>
 
-                    <!-- Custom File Picker -->
-                    <div x-show="templateForm.mode === 'custom'" class="pt-2">
-                        <input type="file" id="templateFileInput" accept=".xlsx" @change="handleFileSelected" class="text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 dark:file:bg-slate-800 dark:file:text-slate-200 dark:hover:file:bg-slate-700">
+                    <!-- MODE 1: SELECT EXISTING SHEET -->
+                    <div x-show="templateForm.mode === 'existing'" class="space-y-3.5 p-4 rounded-2xl bg-slate-50/70 border border-slate-200 dark:bg-slate-800/30 dark:border-slate-800">
+                        <!-- Dropdown from Google Drive -->
+                        <div>
+                            <div class="flex items-center justify-between mb-1.5">
+                                <label class="text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">Select from Your Google Drive</label>
+                                <button type="button" @click="fetchDriveSheets()" :disabled="loadingDriveSheets" class="text-[10px] text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1">
+                                    <span x-show="!loadingDriveSheets">↻ Refresh Drive list</span>
+                                    <span x-show="loadingDriveSheets">Scanning Drive...</span>
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <select x-model="templateForm.selectedDriveSheetId" @change="onDriveSheetSelected()"
+                                    class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500">
+                                    <option value="">-- Choose a spreadsheet found in Drive --</option>
+                                    <template x-for="sheet in driveSheets" :key="sheet.id">
+                                        <option :value="sheet.id" x-text="sheet.name + ' (' + (sheet.id.slice(0, 8) + '...') + ')'"></option>
+                                    </template>
+                                </select>
+                            </div>
+                            <template x-if="!loadingDriveSheets && driveSheets.length === 0">
+                                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">No existing spreadsheets detected in Drive root, or you can paste any link below.</p>
+                            </template>
+                        </div>
+
+                        <!-- Manual Google Sheet URL / ID Input -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Or Paste Google Sheet Link / ID</label>
+                            <input type="text" x-model="templateForm.existingSheetInput"
+                                placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs.../edit or Sheet ID"
+                                class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs font-mono focus:ring-2 focus:ring-emerald-500">
+                            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Paste your Google Sheet's browser URL or its 44-character alphanumeric ID.</p>
+                        </div>
+
+                        <!-- Connect Existing Action Button -->
+                        <button type="button" @click="connectExistingSheet()" :disabled="connectingExisting || !templateForm.existingSheetInput"
+                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm">
+                            <span x-show="!connectingExisting">Link Selected Google Sheet</span>
+                            <span x-show="connectingExisting" class="flex items-center gap-2">
+                                <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                Validating Sheet Permissions &amp; Tabs...
+                            </span>
+                        </button>
+                    </div>
+
+                    <!-- MODE 2 & 3: PROVISION NEW SHEET (BUNDLED OR CUSTOM .XLSX) -->
+                    <div x-show="templateForm.mode !== 'existing'" class="space-y-3.5 p-4 rounded-2xl bg-slate-50/70 border border-slate-200 dark:bg-slate-800/30 dark:border-slate-800">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">New Spreadsheet Title</label>
+                            <input type="text" x-model="templateForm.title" class="w-full px-3.5 py-2.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white text-xs focus:ring-2 focus:ring-emerald-500">
+                        </div>
+
+                        <!-- Custom File Picker -->
+                        <div x-show="templateForm.mode === 'custom'">
+                            <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5">Select Excel .xlsx Template</label>
+                            <input type="file" id="templateFileInput" accept=".xlsx" @change="handleFileSelected" class="text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-200 file:text-slate-800 hover:file:bg-slate-300 dark:file:bg-slate-800 dark:file:text-slate-200 dark:hover:file:bg-slate-700">
+                        </div>
+
+                        <button @click="provisionTemplate()" :disabled="provisioning"
+                            class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-xl text-xs transition flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm">
+                            <template x-if="!provisioning">
+                                <span x-text="setupStatus.spreadsheet_id ? 'Re-provision / Replace Sheet' : 'Provision Google Sheet Now'"></span>
+                            </template>
+                            <template x-if="provisioning">
+                                <span class="flex items-center gap-2">
+                                    <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                    Converting Template to Google Sheet...
+                                </span>
+                            </template>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Provision Success Banner (if already provisioned) -->
-                <div x-show="setupStatus.spreadsheet_url" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-500/30 dark:text-emerald-300 space-y-2 text-xs">
+                <!-- Connected Sheet Banner (shown whenever a sheet is linked) -->
+                <div x-show="setupStatus.spreadsheet_id" class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 dark:bg-emerald-950/40 dark:border-emerald-500/30 dark:text-emerald-300 space-y-2 text-xs">
                     <div class="flex items-center justify-between">
-                        <span class="text-emerald-800 dark:text-emerald-300 font-semibold">✓ Google Sheet Provisioned</span>
+                        <span class="text-emerald-800 dark:text-emerald-300 font-semibold flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            <span>Tracker Spreadsheet Connected</span>
+                        </span>
                         <a :href="setupStatus.spreadsheet_url" target="_blank" class="text-emerald-700 dark:text-emerald-400 underline hover:text-emerald-900 dark:hover:text-emerald-300 flex items-center gap-1">
                             <span>Open in Google Sheets</span>
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
@@ -276,23 +359,10 @@
                     <p class="text-slate-700 dark:text-slate-300 font-mono text-[11px] truncate" x-text="setupStatus.spreadsheet_name + ' (ID: ' + setupStatus.spreadsheet_id + ')'"></p>
                 </div>
 
-                <!-- Action Button -->
-                <div class="space-y-3">
-                    <button @click="provisionTemplate()" :disabled="provisioning"
-                        class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl text-sm transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50">
-                        <template x-if="!provisioning">
-                            <span x-text="setupStatus.spreadsheet_id ? 'Re-provision / Replace Sheet' : 'Provision Google Sheet Now'"></span>
-                        </template>
-                        <template x-if="provisioning">
-                            <span class="flex items-center gap-2">
-                                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
-                                Converting Excel Template to Google Sheet...
-                            </span>
-                        </template>
-                    </button>
-
-                    <button x-show="setupStatus.spreadsheet_id" @click="currentStep = 3; runHealthCheck();"
-                        class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:active:bg-slate-900 dark:text-slate-200 dark:border-transparent font-semibold rounded-2xl text-xs transition flex items-center justify-center gap-2">
+                <!-- Continue Button -->
+                <div x-show="setupStatus.spreadsheet_id" class="pt-2">
+                    <button @click="currentStep = 3; runHealthCheck();"
+                        class="w-full py-3.5 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-semibold rounded-2xl text-xs transition flex items-center justify-center gap-2 shadow-md">
                         <span>Continue to Connection Health Check &rarr;</span>
                     </button>
                 </div>
@@ -349,7 +419,7 @@
                     </button>
 
                     <button @click="currentStep = 2" class="w-full py-2 text-xs text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white transition text-center">
-                        &larr; Back to Template Provisioning
+                        &larr; Back to Tracker Sheet Configuration
                     </button>
                 </div>
             </div>
@@ -433,9 +503,14 @@
                 },
                 templateForm: {
                     title: 'Credit Card Payment Tracker',
-                    mode: 'bundled',
-                    selectedFile: null
+                    mode: 'existing',
+                    selectedFile: null,
+                    existingSheetInput: '',
+                    selectedDriveSheetId: ''
                 },
+                driveSheets: [],
+                loadingDriveSheets: false,
+                connectingExisting: false,
                 provisioning: false,
                 checkingHealth: false,
                 allChecksPassed: false,
@@ -453,6 +528,27 @@
                     const errorParam = params.get('error');
                     const detailParam = params.get('detail');
                     const stepParam = params.get('step');
+                    const isDemo = params.get('demo') === 'true';
+
+                    if (isDemo) {
+                        this.setupStatus = {
+                            has_client_credentials: true,
+                            setup_completed: false,
+                            owner_email: 'demo.user@example.com',
+                            has_google_token: true,
+                            spreadsheet_id: '',
+                            spreadsheet_name: 'Credit Card Payment Tracker',
+                            spreadsheet_url: '',
+                            allow_setup_reset: true
+                        };
+                        this.driveSheets = [
+                            { id: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms', name: 'Credit Card Payment Tracker' },
+                            { id: '1AbCdEfGhIjKlMnOpQrStUvWxYz0123456789ABCDEF', name: 'Personal Finance & Cards' }
+                        ];
+                        this.currentStep = stepParam ? parseInt(stepParam) : 2;
+                        this.initialLoading = false;
+                        return;
+                    }
 
                     if (errorParam) {
                         if (errorParam === 'unauthorized_account') {
@@ -479,6 +575,13 @@
                         this.currentStep = this.setupStatus.spreadsheet_id ? 3 : 2;
                     }
 
+                    if (this.currentStep === 2) {
+                        if (this.setupStatus.spreadsheet_url || this.setupStatus.spreadsheet_id) {
+                            this.templateForm.existingSheetInput = this.setupStatus.spreadsheet_url || this.setupStatus.spreadsheet_id;
+                        }
+                        this.fetchDriveSheets();
+                    }
+
                     if (this.currentStep === 3 && !this.setupStatus.setup_completed) {
                         this.runHealthCheck();
                     }
@@ -490,9 +593,58 @@
                         const res = await fetch('/api/setup/status');
                         if (res.ok) {
                             this.setupStatus = await res.json();
+                            if (this.setupStatus.spreadsheet_url || this.setupStatus.spreadsheet_id) {
+                                this.templateForm.existingSheetInput = this.setupStatus.spreadsheet_url || this.setupStatus.spreadsheet_id;
+                            }
                         }
                     } catch (err) {
                         console.error('Failed to load setup status:', err);
+                    }
+                },
+                async fetchDriveSheets() {
+                    this.loadingDriveSheets = true;
+                    try {
+                        const res = await fetch('/api/setup/drive-sheets');
+                        if (res.ok) {
+                            const data = await res.json();
+                            this.driveSheets = data.spreadsheets || [];
+                        }
+                    } catch (e) {
+                        console.error('Error fetching drive sheets:', e);
+                    } finally {
+                        this.loadingDriveSheets = false;
+                    }
+                },
+                onDriveSheetSelected() {
+                    if (this.templateForm.selectedDriveSheetId) {
+                        this.templateForm.existingSheetInput = this.templateForm.selectedDriveSheetId;
+                    }
+                },
+                async connectExistingSheet() {
+                    const identifier = this.templateForm.existingSheetInput || this.templateForm.selectedDriveSheetId;
+                    if (!identifier) {
+                        this.errorMessage = 'Please select a Google Sheet from Drive or paste a Sheet URL / ID.';
+                        return;
+                    }
+                    this.connectingExisting = true;
+                    this.errorMessage = '';
+                    try {
+                        const res = await fetch('/api/setup/select-existing-sheet', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ sheet_identifier: identifier })
+                        });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.detail || 'Failed to connect existing spreadsheet');
+
+                        await this.fetchStatus();
+                        if (data.warning) {
+                            this.errorMessage = data.warning;
+                        }
+                    } catch (err) {
+                        this.errorMessage = err.message;
+                    } finally {
+                        this.connectingExisting = false;
                     }
                 },
                 getCallbackUrl() {

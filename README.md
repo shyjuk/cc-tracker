@@ -22,7 +22,7 @@ A modern, self-hosted web application and pipeline to automatically ingest passw
   - Extensible architecture to add any bank parser in minutes.
 - **3-Step First-Time Setup Wizard:**
   1. Google Cloud Console helpers with drag-and-drop `client_secret.json` upload and Google SSO.
-  2. Automatic Google Sheet provisioning from bundled/custom Excel `.xlsx` templates.
+  2. Select an existing Google Sheet from Google Drive (or paste link/ID), or automatically provision a new tracker sheet from bundled/custom Excel `.xlsx` templates.
   3. 3-point live health check verifying Identity, Drive/Sheets read-write, and Gmail label access.
 - **Minimal Permissions:** Uses Google Drive `drive.file` and `gmail.readonly` scopes only — zero access to your other Google Drive files or broad spreadsheets.
 - **Interactive Web Dashboard:** Light & Dark themes with automatic browser/system theme preference detection (`prefers-color-scheme`) and persistent manual toggle. Built with Tailwind CSS and Alpine.js showing:
@@ -45,9 +45,12 @@ Live monthly credit card payment matrix mirroring your Google Sheet, KPI summary
 **Light Mode:**
 ![Financial Dashboard Light](docs/screenshots/dashboard_light.png)
 
-### 🧙‍♂️ First-Time Setup Wizard (Step 1 of 3)
-1-click Google Cloud Console helpers, drag-and-drop `client_secret.json` credentials uploader, and Google SSO sign-in.
-![First-Time Setup Wizard](docs/screenshots/setup_wizard.png)
+### 🧙‍♂️ First-Time Setup Wizard (Steps 1 & 2)
+1-click Google Cloud Console helpers, drag-and-drop `client_secret.json` credentials uploader, and Google SSO sign-in:
+![First-Time Setup Wizard Step 1](docs/screenshots/setup_wizard.png)
+
+Select an existing Google Sheet from Google Drive (or paste link/ID), or auto-provision from templates:
+![First-Time Setup Wizard Step 2](docs/screenshots/setup_sheet_selection.png)
 
 ### ⚙️ Bank Statement Mapping Rules & Diagnostics
 Manage bank queries, statement PDF passwords, and parser assignments with an in-app Gmail live tester.

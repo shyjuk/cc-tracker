@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import secrets
 from typing import Optional
@@ -14,6 +15,7 @@ from google_auth import (
     create_authorization_url,
     exchange_code_for_tokens,
     get_google_credentials,
+    get_drive_service,
     get_sheets_service,
     get_gmail_service,
     provision_spreadsheet_from_template
@@ -28,6 +30,21 @@ class ClientCredentialsSchema(BaseModel):
 
 class VerifySetupSchema(BaseModel):
     gmail_label: Optional[str] = "Statements"
+
+class SelectExistingSheetSchema(BaseModel):
+    sheet_identifier: str
+
+def extract_spreadsheet_id(identifier: str) -> str:
+    """Extracts the Google Spreadsheet ID from a raw ID or full Google Sheet URL."""
+    identifier = identifier.strip()
+    match = re.search(r'/d/([a-zA-Z0-9-_]{20,})', identifier)
+    if match:
+        return match.group(1)
+    match = re.search(r'[?&]id=([a-zA-Z0-9-_]{20,})', identifier)
+    if match:
+        return match.group(1)
+    clean = identifier.strip('/').split('?')[0].split('#')[0]
+    return clean
 
 def get_redirect_uri(request: Request) -> str:
     """Builds the canonical OAuth redirect URI matching the current browser request host."""
@@ -347,6 +364,85 @@ async def provision_template(
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to provision Google Sheet from template: {str(e)}")
+
+@router.get("/api/setup/drive-sheets")
+def list_drive_spreadsheets():
+    """
+    Lists Google Spreadsheets accessible in Google Drive for the authenticated owner.
+    Returns id, name, webViewLink, and modifiedTime.
+    """
+    creds = get_google_credentials()
+    if not creds:
+        raise HTTPException(status_code=401, detail="Google authentication required. Please sign in with Google first.")
+
+    try:
+        drive = get_drive_service(creds)
+        response = drive.files().list(
+            q="mimeType='application/vnd.google-apps.spreadsheet' and trashed=false",
+            pageSize=30,
+            orderBy="modifiedTime desc",
+            fields="files(id, name, webViewLink, modifiedTime)"
+        ).execute()
+        files = response.get("files", [])
+        return {"spreadsheets": files}
+    except Exception as e:
+        print(f"Failed to list spreadsheets from Drive: {e}")
+        return {"spreadsheets": [], "error": str(e)}
+
+@router.post("/api/setup/select-existing-sheet")
+def select_existing_sheet(payload: SelectExistingSheetSchema):
+    """
+    Validates and links an existing Google Sheet by ID or URL.
+    Fetches title, tabs, and sets it as the active tracker spreadsheet.
+    """
+    creds = get_google_credentials()
+    if not creds:
+        raise HTTPException(status_code=401, detail="Google authentication required. Please sign in with Google first.")
+
+    raw_input = payload.sheet_identifier.strip()
+    if not raw_input:
+        raise HTTPException(status_code=400, detail="Spreadsheet URL or ID is required.")
+
+    sheet_id = extract_spreadsheet_id(raw_input)
+    if not sheet_id:
+        raise HTTPException(status_code=400, detail="Invalid Google Sheet URL or Spreadsheet ID format.")
+
+    try:
+        sheets = get_sheets_service(creds)
+        sheet_meta = sheets.spreadsheets().get(spreadsheetId=sheet_id).execute()
+        sheet_name = sheet_meta.get("properties", {}).get("title") or "Credit Card Payment Tracker"
+        tabs = [s["properties"]["title"] for s in sheet_meta.get("sheets", [])]
+        sheet_url = sheet_meta.get("spreadsheetUrl") or f"https://docs.google.com/spreadsheets/d/{sheet_id}/edit"
+
+        # Check for year tabs (e.g. 2026, 2025, etc.)
+        year_tabs = [t for t in tabs if t.isdigit() and len(t) == 4]
+        warning = None
+        if not year_tabs:
+            warning = "Note: No 4-digit year tabs (e.g. '2026') found. Ensure your sheet has year tabs for the sync pipeline to update."
+
+        # Save to database settings
+        set_setting("spreadsheet_id", sheet_id)
+        set_setting("spreadsheet_name", sheet_name)
+        set_setting("spreadsheet_url", sheet_url)
+        set_setting("spreadsheet_tabs", json.dumps(tabs))
+
+        return {
+            "success": True,
+            "spreadsheet_id": sheet_id,
+            "spreadsheet_name": sheet_name,
+            "spreadsheet_url": sheet_url,
+            "tabs": tabs,
+            "warning": warning
+        }
+
+    except Exception as e:
+        err_msg = str(e)
+        if "404" in err_msg or "not found" in err_msg.lower():
+            raise HTTPException(status_code=404, detail=f"Spreadsheet not found (ID: {sheet_id}). Please check the URL or ID.")
+        elif "403" in err_msg or "permission" in err_msg.lower():
+            raise HTTPException(status_code=403, detail=f"Permission denied accessing spreadsheet {sheet_id}. Ensure your Google account has permission to view/edit this sheet.")
+        else:
+            raise HTTPException(status_code=500, detail=f"Failed to connect to Google Sheet: {err_msg}")
 
 @router.post("/api/setup/verify-and-finish")
 def verify_and_finish_setup(payload: VerifySetupSchema):

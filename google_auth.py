@@ -14,6 +14,7 @@ SCOPES = [
     "https://www.googleapis.com/auth/userinfo.email",
     "https://www.googleapis.com/auth/userinfo.profile",
     "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/gmail.readonly"
 ]
 
@@ -105,8 +106,7 @@ def get_google_credentials() -> Optional[Credentials]:
         refresh_token=refresh_token,
         token_uri="https://oauth2.googleapis.com/token",
         client_id=client_id,
-        client_secret=client_secret,
-        scopes=SCOPES
+        client_secret=client_secret
     )
 
     if creds.expired and creds.refresh_token:
