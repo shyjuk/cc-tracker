@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Google & Database Configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
 GOOGLE_SERVICE_ACCOUNT_FILE = os.getenv("GOOGLE_SERVICE_ACCOUNT_FILE", "service_account.json")
 SPREADSHEET_NAME_OR_ID = os.getenv("SPREADSHEET_NAME_OR_ID", "Credit Card Payment Tracker")
 SHEET_TAB_NAME = os.getenv("SHEET_TAB_NAME", "2026")

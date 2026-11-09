@@ -1,15 +1,29 @@
 import os
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
+
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Boolean, Text, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from config import SQLITE_DB_PATH
 
-# Support cloud external database (e.g. Postgres on FastAPI Cloud / Supabase / Neon)
+# Support cloud external database (e.g. Postgres on Neon / FastAPI Cloud / Render / Supabase)
 DATABASE_URL = os.getenv("DATABASE_URL")
 if DATABASE_URL:
     if DATABASE_URL.startswith("postgres://"):
         DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
-    engine = create_engine(DATABASE_URL, echo=False)
+    if DATABASE_URL.startswith("postgresql://") and not DATABASE_URL.startswith("postgresql+"):
+        try:
+            import psycopg2  # noqa: F401
+            DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+        except ImportError:
+            try:
+                import psycopg  # noqa: F401
+                DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+            except ImportError:
+                pass
+    engine = create_engine(DATABASE_URL, echo=False, pool_pre_ping=True, pool_recycle=300)
 else:
     engine = create_engine(
         f"sqlite:///{SQLITE_DB_PATH}",
